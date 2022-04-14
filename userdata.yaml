@@ -1,0 +1,8 @@
+#cloud-config
+package_update: true
+packages:
+  - docker.io
+  - docker-compose
+runcmd:
+  - RUM PREVIOUS COMMANDS 
+  - docker-compose -f /generic/docker-compose.yml up -d

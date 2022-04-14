@@ -1,0 +1,65 @@
+version: '3'
+
+services:
+  node-api:
+    restart: unless-stopped
+    #image: #docker image of the node app
+    build:
+      context: ../site1/
+    container_name: site1
+    ports:
+      - 5021:5021
+    command: SOME COMMAND
+    environment:
+      NODE_ENV: production
+      VIRTUAL_HOST: generic.host
+      LETSENCRYPT_HOST: generic.host
+      LETSENCRYPT_EMAIL: generic.host.domain
+      mem_limit: 256m
+      mem_reservation: 128m
+
+  felipe_front:
+    restart: unless-stopped
+    #image: #docker image of the node app
+    build:
+      context: ../site2/
+    container_name: site2
+    command: SOME COMMAND
+    ports:
+      - 5000:5000
+    depends_on:
+      - node-api
+    environment:
+      NODE_ENV: production
+      VIRTUAL_HOST: generic.host
+      LETSENCRYPT_HOST: generic.host
+      LETSENCRYPT_EMAIL: generic.host.domain
+      mem_limit: 256m
+      mem_reservation: 128m
+
+  nginx:
+    image: jwilder/nginx-proxy
+    restart: always
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./nginx/certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+
+volumes:
+  html:
+  vhost:
